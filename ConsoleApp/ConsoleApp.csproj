@@ -6,6 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EntityFrameworkCoreSample.Data\EntityFrameworkCoreSample.Data.csproj" />
     <ProjectReference Include="..\EntityFrameworkCoreSample.Domain\EntityFrameworkCoreSample.Domain.csproj" />
   </ItemGroup>

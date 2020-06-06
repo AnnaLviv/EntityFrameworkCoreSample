@@ -24,6 +24,7 @@ namespace ConsoleApp
         {
             var samurai = new Samurai { Name = "Ramses" };
             context.Samurais.Add(samurai);
+            //code triggeres saving results in DB
             context.SaveChanges();
         }
 
