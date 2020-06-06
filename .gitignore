@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/ConsoleApp/bin
+/ConsoleApp/obj
+/EntityFrameworkCoreSample.Data/bin
+/EntityFrameworkCoreSample.Data/obj
+/EntityFrameworkCoreSample.Domain/bin
+/EntityFrameworkCoreSample.Domain/obj
+/EntityFrameworkCoreSample.Tests/bin
+/EntityFrameworkCoreSample.Tests/obj
