@@ -1,5 +1,6 @@
 ﻿using EntityFrameworkCoreSample.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EntityFrameworkCoreSample.Data
 {
@@ -12,7 +13,9 @@ namespace EntityFrameworkCoreSample.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(
+            optionsBuilder
+                .UseLoggerFactory(ConsoleLoggerFacory)
+                .UseSqlServer(
                 "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiAppData");
         }
      
@@ -24,6 +27,14 @@ namespace EntityFrameworkCoreSample.Data
             //It is possible to set up Horse the way that its properties will be included in Samurai table (rather than is separate "Horse" table)
             modelBuilder.Entity<Horse>().ToTable("Horses");
         }
+
+        //In ASP.Net Core logger is built in
+        public static readonly ILoggerFactory ConsoleLoggerFacory = LoggerFactory.Create(builder =>
+      {
+          builder
+            .AddFilter((category, level) =>   category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information)
+            .AddConsole();
+      });
     }
 }
 
