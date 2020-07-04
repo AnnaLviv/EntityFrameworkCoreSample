@@ -15,6 +15,9 @@ namespace EntityFrameworkCoreSample.Data
         {
             optionsBuilder
                 .UseLoggerFactory(ConsoleLoggerFacory)
+#if DEBUG
+                .EnableSensitiveDataLogging() //Newxt to other sensitive data logs queries parmaters. Never use on production
+#endif
                 .UseSqlServer(
                 "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiAppData");
         }
