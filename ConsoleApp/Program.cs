@@ -60,7 +60,7 @@ namespace ConsoleApp
             context.SaveChanges();
         }
 
-        private static void GetSamurais (string text)
+        private static void GetSamurais(string text)
         {
             var samurais = context.Samurais.ToList();
             Console.WriteLine($"{text} Samurai count is {samurais.Count}");
@@ -76,7 +76,7 @@ namespace ConsoleApp
 
             //Both queries below will give the same result. "Contains" will be converted into "Like" in the background SQL query anyway
             var likeName = "%ams%";
-            var samuraisLike = await context.Samurais.Where(samurai => EF.Functions.Like( samurai.Name, likeName)).ToListAsync();
+            var samuraisLike = await context.Samurais.Where(samurai => EF.Functions.Like(samurai.Name, likeName)).ToListAsync();
 
             var containsName = "ams";
             var samuraisContains = await context.Samurais.Where(samurai => samurai.Name.Contains(containsName)).ToListAsync();
@@ -85,7 +85,7 @@ namespace ConsoleApp
         private static async Task RetrieveAndUpdateSamuraiAsync(string name)
         {
             var samurai = await context.Samurais.FirstOrDefaultAsync(samurai => samurai.Name.Equals(name));
-            if(samurai!=null)
+            if (samurai != null)
             {
                 samurai.Name += "San";
                 await context.SaveChangesAsync();
@@ -134,10 +134,10 @@ namespace ConsoleApp
             // in SamuraiContext constructor. Then context by default will not track for changes.
             var battle = await context.Battles.AsNoTracking().FirstOrDefaultAsync();
             battle.EndDate = new DateTime(1875, 11, 21);
-            using(var newContextInstance = new SamuraiContext())
+            using (var newContextInstance = new SamuraiContext())
             {
-                 newContextInstance.Battles.Update(battle);
-                 await newContextInstance.SaveChangesAsync();
+                newContextInstance.Battles.Update(battle);
+                await newContextInstance.SaveChangesAsync();
             }
         }
 
@@ -164,7 +164,7 @@ namespace ConsoleApp
             {
                 Text = "Time for a new challenge"
             });
-            using(var newContext = new SamuraiContext())
+            using (var newContext = new SamuraiContext())
             {
                 //newContext.Samurais.Update(samurai);
                 //For performance Update can be replaced with Attach
@@ -180,10 +180,10 @@ namespace ConsoleApp
             //EF core uses "Left Join" query to extract the data with Include().
             //Include() works only on collections of entities, not on a single entity.
             var samuraiWithQuotes = await context.Samurais
-                .Where(samurai=>samurai.Name.Equals("Ramses"))
+                .Where(samurai => samurai.Name.Equals("Ramses"))
                 .Include(samurai => samurai.Quotes)
-              //  .Include(samurai=>samurai.Clan)  //We can inlcude multiple children
-              //  .ThenInclude(quote=> quote.Child)    //ThenInclude can retrieve grandchildren
+                //  .Include(samurai=>samurai.Clan)  //We can inlcude multiple children
+                //  .ThenInclude(quote=> quote.Child)    //ThenInclude can retrieve grandchildren
                 .ToListAsync();
         }
 
@@ -221,7 +221,7 @@ namespace ConsoleApp
         {
             var samurai = await context.Samurais.FirstOrDefaultAsync(samurai => samurai.Name.Equals("Ramses"));
             //LazyLoading is OK. Only one command to retrieve all Quotes will be sent
-            foreach(var quote in samurai.Quotes)
+            foreach (var quote in samurai.Quotes)
             {
                 Console.WriteLine(quote.Text);
             }
@@ -230,6 +230,129 @@ namespace ConsoleApp
             var quotesCount = samurai.Quotes.Count();
         }
 
+        private static async Task FilteringWithRelatedDataAsync()
+        {
+            //we want to retrieve samurais with "challenge" quotes.
+            //we don't want quotes, only such samurais
+            var samurais = await context.Samurais
+                .Where(samurai => samurai.Quotes.Any(quote => quote.Text.Contains("challenge")))
+                .ToListAsync();
+        }
+
+        private static async Task ModifyingRelatedDataWhenTrackedAsync()
+        {
+            var samurai = await context.Samurais
+                .Include(samurai => samurai.Quotes)
+                .FirstOrDefaultAsync(samurai => samurai.Id.Equals(2));
+            samurai.Quotes.Remove(samurai.Quotes[2]);
+            samurai.Quotes[0].Text = "What's up?";
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task ModifyingRelatedDataWhenNotTrackedAsync()
+        {
+            var samurai = await context.Samurais
+                .Include(samurai => samurai.Quotes)
+                .FirstOrDefaultAsync(samurai => samurai.Id.Equals(2));
+            var quote = samurai.Quotes[0];
+            quote.Text += "What's up now?";
+
+            using (var newContext = new SamuraiContext())
+            {
+                newContext.Entry(quote).State = EntityState.Modified;
+                await newContext.SaveChangesAsync();
+            }
+        }
+
+        private static async Task JoinBattleAndSamuraiAsync()
+        {            
+            var sbJoin = new SamuraiBattle { SamuraiId = 2, BattleId = 1 };
+            //There is no DbSet SamuraiBattle. We cannot use context.SamuraiBattles.Add
+            await context.AddAsync(sbJoin);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task EnlistSamuraiIntoBattleAsync()
+        {
+            var battle = await context.Battles.FindAsync(1);
+            battle.SamuraiBattles.Add(new SamuraiBattle { SamuraiId = 1 });
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task RemoveJoinBattleAndSamuraiAsync()
+        {
+            //It is recommended to retrieve table from DB and delete it. For simple tables like SamuraiBattle the following approach is acceptable
+            var sbJoin = new SamuraiBattle { SamuraiId = 2, BattleId = 1 };
+            context.Remove(sbJoin);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task GetSamuraiWithBattlesAsync()
+        {
+            var samuraiWithBattles = await context.Samurais
+                .Include(samurai => samurai.SamuraiBattles)
+                .ThenInclude(samuraiBattle => samuraiBattle.Battle)
+                .FirstOrDefaultAsync(samurai => samurai.Id.Equals(2));
+
+            var samuraiWithBattlesCleaner = await context.Samurais
+                .Where(samurai => samurai.Id.Equals(2))
+                .Select(samurai => new { Samurai = samurai, Battles = samurai.SamuraiBattles.Select(samuraiBattle => samuraiBattle.Battle) })
+                .FirstOrDefaultAsync();
+        }
+
+        private static async Task AddNewSamuraiWithHorseAsync()
+        {
+            var samurai = new Samurai { Name = "Simba" };
+            samurai.Horse = new Horse { Name = "Pegas" };
+            await context.Samurais.AddAsync(samurai);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task AddNewHorseToSamuraiUsingIdAsync()
+        {
+            var horse = new Horse { Name = "Pegas", SamuraiId=1 };
+            await context.AddAsync(horse);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task ReplaceAHorseAsync()
+        {
+            //  var samurai = await context.Samurais.Include(samurai => samurai.Horse).FirstOrDefaultAsync();
+            var samurai = await context.Samurais.FindAsync(12);
+            samurai.Horse =  new Horse { Name = "Pegas" };
+            //if samurai is in memory, or if samurai already ha as horse - exception will pop up
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task GetSamuraisWithHorseAsync()
+        {
+            var samurais = await context.Samurais.Include(s => s.Horse).ToListAsync();
+        }
+
+        private static async Task GetHorsesWithSamuraisAsync()
+        {
+            var horseWithoutSamurai = await context.Set<Horse>().FindAsync(1);
+
+            var horseWithSamurai = await context.Samurais
+                .Include(s => s.Horse)
+                .FirstOrDefaultAsync(s => s.Horse.Id.Equals(1));
+
+            var horsesWithSamurais = await context.Samurais
+                .Where(s => s.Horse != null)
+                .Select(s => new { Samurai = s, Horse = s.Horse })
+                .ToListAsync();
+        }
+
+        private static async Task GetSamuraiWithClanAsync()
+        {
+            var samurai = await context.Samurais.Include(s => s.Clan).FirstOrDefaultAsync();
+        }
+
+        private static async Task GetClanWithSamurais()
+        {
+            var clan = await context.Clans.FindAsync(1);
+            var samuraisForClan = await context.Samurais.Where(s => s.Clan.Id.Equals(3)).ToListAsync();
+        }
 
     }
 }
