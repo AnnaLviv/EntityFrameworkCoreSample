@@ -17,7 +17,7 @@ namespace ConsoleApp
             context.Database.EnsureCreated();
 
             //GetSamurais("Before adding:");
-            //AddSamurai();
+            AddSamurai();
             //GetSamurais("After adding:");
             //InserMultipleSamurais();
             //InsertVariousTypes();
@@ -29,8 +29,32 @@ namespace ConsoleApp
             //await AddBattleAsync();
             //await QueryAndUpdateBattleDicsonnectedAsync();
             //await AddQuoteToExistingSamuraiNotTrackedAsync();
+
+            await QueryUsingRawSqlAsync();
             Console.WriteLine("Press any key ...");
             Console.ReadKey();
+        }
+
+        private static async Task QueryUsingRawSqlAsync()
+        {
+            //Creates as IQueryable, so we still need an execution method.
+            //We must use parameters to avoid SQL injection
+            //Query can't contain related data
+            //Can only be used for known entities
+            var samurais = await context.Samurais.FromSqlRaw("Select * from Samurais").ToListAsync();
+
+            var samuraisWithQuotes = await context.Samurais.FromSqlRaw("Select Id,Name,ClanId from Samurais")
+                .Include(s=>s.Quotes)
+                .ToListAsync();
+
+            var specificName = "Ramses";
+            var samuraisWithSpecificName = await context.Samurais.FromSqlInterpolated($"Select * from Samurais Where Name = {specificName}")
+                .ToListAsync();
+            //It is possible to execute stored procedures the same way
+
+            //Queries/SPs that can be executed on a DB.
+            //Returns # of affcted entries.
+            var numberOfRowsAffected = await context.Database.ExecuteSqlInterpolatedAsync($"Delete from Samurais Where Name = {specificName}");
         }
 
         private static void AddSamurai()
