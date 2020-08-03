@@ -11,3 +11,5 @@
 /EntityFrameworkCoreSample.Domain/obj
 /EntityFrameworkCoreSample.Tests/bin
 /EntityFrameworkCoreSample.Tests/obj
+/SamuraiApi/bin/
+/SamuraiApi/obj

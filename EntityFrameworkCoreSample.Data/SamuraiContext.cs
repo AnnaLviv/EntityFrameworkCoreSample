@@ -6,22 +6,21 @@ namespace EntityFrameworkCoreSample.Data
 {
     public class SamuraiContext:DbContext
     {
+        public SamuraiContext(DbContextOptions<SamuraiContext> options)
+            :base(options)
+        {
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        }
+
+        public SamuraiContext()
+        {
+        }
+
         public DbSet<Samurai> Samurais { get; set; }
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<Clan> Clans { get; set; }
         public DbSet<Battle> Battles { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder
-                .UseLoggerFactory(ConsoleLoggerFacory)
-#if DEBUG
-                .EnableSensitiveDataLogging() //Newxt to other sensitive data logs queries parmaters. Never use on production
-#endif
-                .UseSqlServer(
-                "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiAppData");
-        }
-     
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //Specification of many-to-many relation in DB
@@ -32,12 +31,25 @@ namespace EntityFrameworkCoreSample.Data
         }
 
         //In ASP.Net Core logger is built in
-        public static readonly ILoggerFactory ConsoleLoggerFacory = LoggerFactory.Create(builder =>
-      {
-          builder
-            .AddFilter((category, level) =>   category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information)
-            .AddConsole();
-      });
+      //  public static readonly ILoggerFactory ConsoleLoggerFacory = LoggerFactory.Create(builder =>
+      //{
+      //    builder
+      //      .AddFilter((category, level) => category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information)
+      //      .AddConsole();
+      //});
+
+
+        //for Asp.NET core these settings come from startup file
+//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//        {
+//            optionsBuilder
+//                .UseLoggerFactory(ConsoleLoggerFacory)
+//#if DEBUG
+//                        .EnableSensitiveDataLogging() //Newxt to other sensitive data logs queries parmaters. Never use on production
+//#endif
+//                        .UseSqlServer(
+//                "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiAppData");
+//        }
     }
 }
 
