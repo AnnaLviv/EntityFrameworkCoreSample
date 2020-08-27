@@ -1,7 +1,7 @@
-Next to Fiddler and Postman we can execute API requests through Visual Studio Code extension called
+Next to Fiddler, Postman or Swagger we can execute API requests through Visual Studio Code extension called
 "REST Client"
 
-Samples of calles can be found in ../REST calls.txt
+Samples of calls can be found in ../REST calls.txt
 To execute the call:
 1. Highlight the call
 2. Click F1

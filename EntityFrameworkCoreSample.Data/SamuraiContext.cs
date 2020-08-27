@@ -12,6 +12,9 @@ namespace EntityFrameworkCoreSample.Data
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
+        public SamuraiContext(DbContextOptions options): base(options)
+        {  }
+
         public SamuraiContext()
         {
         }
@@ -31,25 +34,30 @@ namespace EntityFrameworkCoreSample.Data
         }
 
         //In ASP.Net Core logger is built in
-      //  public static readonly ILoggerFactory ConsoleLoggerFacory = LoggerFactory.Create(builder =>
-      //{
-      //    builder
-      //      .AddFilter((category, level) => category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information)
-      //      .AddConsole();
-      //});
+        //  public static readonly ILoggerFactory ConsoleLoggerFacory = LoggerFactory.Create(builder =>
+        //{
+        //    builder
+        //      .AddFilter((category, level) => category == DbLoggerCategory.Database.Command.Name && level == LogLevel.Information)
+        //      .AddConsole();
+        //});
 
 
         //for Asp.NET core these settings come from startup file
-//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//        {
-//            optionsBuilder
-//                .UseLoggerFactory(ConsoleLoggerFacory)
-//#if DEBUG
-//                        .EnableSensitiveDataLogging() //Newxt to other sensitive data logs queries parmaters. Never use on production
-//#endif
-//                        .UseSqlServer(
-//                "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiAppData");
-//        }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if(!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder
+                        //  .UseLoggerFactory(ConsoleLoggerFacory)
+#if DEBUG
+                        .EnableSensitiveDataLogging() //Next to other sensitive data logs queries parmaters. Never use on production
+#endif
+                            //for testing we want to use test database
+                            .UseSqlServer(
+                    "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=SamuraiTestData");
+            }
+
+        }
     }
 }
 
